@@ -172,20 +172,12 @@ void insere_no(Avl* arv, No** no_atual, Container* reg){
     rebalanceia(no_atual);
 }
 /**
- * Dado um nó, coloca o novo registro no final da lista ligada presente nele.
+ * Dado um nó, coloca o novo registro no início da lista ligada presente nele.
 */
 void _insere_mesmo_no(No** no, Container* reg){
 
     Container* item = cria_reg(reg->cod, reg->chave);
 
-    Container* aux = (*no)->reg;
-
-    // while (aux->prox)
-    // {
-    //     aux = aux->prox;
-    // }
-    // aux->prox = item;
-    // return;
     item->prox = (*no)->reg;
     
     (*no)->reg = item;

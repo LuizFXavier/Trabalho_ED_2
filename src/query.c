@@ -11,6 +11,10 @@ Query* cria_query(){
     nova->inicio = NULL;
     return nova;
 }
+/**
+ * Busca de um valor específico em uma AVL.
+ * Retornará todos os elementos presentes no nó que contem a chave indicada.
+*/
 Query* equal_query(Avl *arv, void* chave){
     
     Query* res = cria_query();
@@ -23,6 +27,11 @@ Query* equal_query(Avl *arv, void* chave){
     return res;
 }
 
+/**
+ * Busca de valores em uma Avl em um dado intervalo.
+ * @param min Limite inferior do intervalo a ser buscado. Apenas valores estritamente maiores serão retornados.
+ * @param max Limite superior do intervalo a ser buscado. Apenas valores estritamente menores serão retornados.
+*/
 Query* range_query(Avl *arv, int min, int max)
 {   
     Query* res = cria_query();
@@ -35,33 +44,40 @@ Query* range_query(Avl *arv, int min, int max)
     void * minP = &min;
     void * maxP = &max;
 
+    // Garantia que o tipo certo será passado para o comparador
     if(arv->tipo == FLOAT){
         minP = &minF;
         maxP = &maxF;
     }
     
+    // Busca pelo valor menor ou igual ao mínimo indicado
     atual = busca_AVL_prox(arv, minP);
     
+    // Garantia de que o valor da chave é maior que o mínimo
     while (atual && arv->cmp(atual->reg->chave, minP) <= 0)
     { 
         atual = sucessor(atual);
     }
 
+    // Armazenamento de todos os elementos de todos os nós que possuem chave menor ao máximo
     while (atual && arv->cmp(atual->reg->chave, maxP) < 0)
     {
         fill_query(&res, atual->reg);
         atual = sucessor(atual);
     }
-    printf("Achou\n");
     
     return res;
 }
 
+/**
+ * Interseção entre duas Querys.
+*/
 Query* merge_query(Query* q1, Query* q2){
     
     Query* res = cria_query();
     Container* atual;
 
+    //Garantir que sempre comparará a menor query com a maior
     if(q1->tam > q2->tam){
         Query* aux = q1;
         q1 = q2;
@@ -81,6 +97,9 @@ Query* merge_query(Query* q1, Query* q2){
     return res;
 }
 
+/**
+ * Realização da operação de query especificada com base no filtro montado.
+*/
 Query *do_query(Avl *arvores[])
 {
     Query* res;
@@ -122,6 +141,9 @@ Query *do_query(Avl *arvores[])
     return res;
 }
 
+/**
+ * Verifica se um elemento está presente na Query dada.
+*/
 Bool query_find(Query* query, char* cod){
     Container* atual = query->inicio;
 
@@ -135,6 +157,9 @@ Bool query_find(Query* query, char* cod){
     return FALSE;
 }
 
+/**
+ * Adição de um novo elemento a uma Query.
+*/
 void add_to_query(Query** query, Container* container){
 
     Container* novo = cria_reg(container->cod, container->chave);
@@ -144,6 +169,9 @@ void add_to_query(Query** query, Container* container){
     (*query)->tam++;
 }
 
+/**
+ * Inserção de todos os elementos de uma lista ligada em uma Query.
+*/
 void fill_query(Query** query, Container* container){
 
     while (container)
@@ -153,6 +181,9 @@ void fill_query(Query** query, Container* container){
         }
 }
 
+/**
+ * Liberação de memória de uma Query.
+*/
 void free_query(Query* query){
     
     if(!query)

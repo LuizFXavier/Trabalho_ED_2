@@ -23,7 +23,7 @@ int main(){
 
     JSENSE *file = jse_from_file("test/municipios.json");
 
-    // Leitura do JSON
+    /* Leitura do JSON e preenchimento das árvores com os campos*/
 
     for(int i = 0; i < NUM_CIDADES; i++){
         Cidade* m = read_json(file, i);
@@ -36,12 +36,16 @@ int main(){
         insere_AVL(avl_cod_uf, m->codigo_ibge, &m->codigo_uf);
     }
 
+    //Array com todas as árvores
     Avl* arvores[5] = {avl_nome, avl_long, avl_lat, avl_ddd, avl_cod_uf};
 
     Query* query_p = NULL;
     Opcao opcao;
 
+    //Introdução
     printf("Bem vindo a busca de municípios do Brasil!");
+
+    //Loop principal do programa
     do
     {
         opcao = menu_inicial();
@@ -50,6 +54,7 @@ int main(){
         
     } while (opcao != ENCERRAR);
     
+    //Liberação de memória
     free_query(query_p);
     apagaHash(hashC);
     
@@ -62,6 +67,9 @@ int main(){
     return 0;
 }
 
+/**
+ * Leitura de uma cidade que está na i-ésima posição do JSON
+*/
 Cidade* read_json(JSENSE *file, int i){
     int error;
     char itens[9][18];
@@ -92,6 +100,9 @@ Cidade* read_json(JSENSE *file, int i){
     return cria_cidade(ibge, nome, longitude, latitude, capital, codigo_uf, siafi_id, ddd, fuso_horario);
 }
 
+/**
+ * Menu que realiza a operação desejada com base na opção escolhida anteriormente.
+*/
 void menu(Avl* arvores[], Query** query_p, Opcao opcao, Hash_table* hash){
     
     Query* query_s;
@@ -120,6 +131,9 @@ void menu(Avl* arvores[], Query** query_p, Opcao opcao, Hash_table* hash){
     }
     
 }
+/**
+ * Impressão das informações das cidades encotradas nas buscas.
+*/
 void print_query(Query* query, Hash_table* hash){
 
     if(!query){
