@@ -1,22 +1,23 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "avl.h"
 #include "cidade.h"
 
-void percorre(t_no* no){
+void percorre(No* no){
     
     printf("\n%d: ",no->altura);
     // if(no->pai){
     //     printf("Qual filho? %d:%d\n", no->pai->esq == no, no->pai->dir == no);
     // }
 
-    t_cont* atual = no->reg;
+    Container* atual = no->reg;
 
-    printf("%d, ", ((c_ddd*)(atual->reg))->ddd);
-    // while (atual)
-    // {
-    //     atual = atual->prox;    
-    // }
+    while (atual)
+    {
+        printf("%d, ", *((int*)(atual->chave)));
+        atual = atual->prox;    
+    }
     
     if(no->esq){
         percorre(no->esq);
@@ -26,49 +27,83 @@ void percorre(t_no* no){
     }
 }
 
-t_cont* cria_reg(void* reg){
-    t_cont* novo = (t_cont*) malloc(sizeof(t_cont));
+Container* cria_reg(char* cod, void* chave){
+    Container* novo = (Container*) malloc(sizeof(Container));
+    // printf("chave: %f\n",*((float*)chave));
+    novo->cod = malloc(sizeof(char*));
+    strcpy(novo->cod, cod);
     novo->prox = NULL;
-    novo->reg = reg;
+    novo->chave = chave;
 
     return novo;
 }
 
-t_avl* cria_avl(int (*cmp)(const void*, const void*)){
-    t_avl* nova = malloc(sizeof(t_avl));
+Avl* cria_avl(Type tipo){
+    Avl* nova = malloc(sizeof(Avl));
 
     nova->raiz = NULL;
-    nova->cmp = cmp;
+    nova->tipo = tipo;
+
+    switch (tipo)
+    {
+    case INT:
+        nova->cmp = cmp_int;
+        break;
+    
+    case FLOAT:
+        nova->cmp = cmp_float;
+        break;
+    
+    case STR:
+        nova->cmp = cmp_str;
+        break;
+
+    default:
+        nova->cmp = cmp_int;
+        break;
+    }
 
     return nova;
 }
-t_no* cria_no(void* reg){
-    t_no* novo = malloc(sizeof(t_no));
+
+No* cria_no(Container* reg){
+    No* novo = malloc(sizeof(No));
     
     novo->altura = 0;
     novo->esq = NULL;
     novo->dir = NULL;
     novo->pai = NULL;
-    novo->reg = cria_reg(reg);
+    novo->reg = cria_reg(reg->cod, reg->chave);
 
     return novo;
+}
+
+int cmp_int(const void* a, const void* b){
+    return *(int*)a - *(int*)b;
+}
+int cmp_float(const void* a, const void* b){
+    return (int)(*((float*)a)) - (int)(*((float*)b));
+    
+}
+int cmp_str(const void* a, const void* b){
+    return strcmp((char*)a, (char*)b);
 }
 
 int max(int a, int b){
     return a > b ? a:b;
 }
 
-int altura_no(t_no* no){
+int altura_no(No* no){
     if(no == NULL){
         return -1;
     }
     return no->altura;
 }
 
-void rebalanceia(t_no** sub_arv){
+void rebalanceia(No** sub_arv){
     int fatorB;
     int fB_filho;
-    t_no* filho;
+    No* filho;
 
     fatorB = altura_no((*sub_arv)->esq) - altura_no((*sub_arv)->dir);
 
@@ -99,11 +134,9 @@ void rebalanceia(t_no** sub_arv){
     
 }
 
-void insere_no(t_avl* arv, t_no** no_atual, void* reg){
+void insere_no(Avl* arv, No** no_atual, Container* reg){
     
-
-    if(arv->cmp((*no_atual)->reg->reg, reg) < 0){
-        
+    if(arv->cmp((*no_atual)->reg->chave, reg->chave) < 0){
         if((*no_atual)->dir){
             
             insere_no(arv, &(*no_atual)->dir, reg);
@@ -114,7 +147,8 @@ void insere_no(t_avl* arv, t_no** no_atual, void* reg){
         }
     }
 
-    else if(arv->cmp((*no_atual)->reg->reg, reg) > 0){
+    else if(arv->cmp((*no_atual)->reg->chave, reg->chave) > 0){
+        
         if((*no_atual)->esq){
             
             insere_no(arv, &(*no_atual)->esq, reg);
@@ -126,71 +160,55 @@ void insere_no(t_avl* arv, t_no** no_atual, void* reg){
     }
     else{ //Inserção em um nó já ocupado
         
-       _insere_mesmo_no(*no_atual, reg);
+       _insere_mesmo_no(no_atual, reg);
     }
 
     (*no_atual)->altura = max(altura_no((*no_atual)->esq), altura_no((*no_atual)->dir)) + 1;
-
     
     rebalanceia(no_atual);
 }
-void _insere_mesmo_no(t_no* no, void* reg){
+void _insere_mesmo_no(No** no, Container* reg){
     
-    t_cont* item = cria_reg(reg);
 
-    t_cont* bloco = no->reg;
 
-    while (bloco->prox)
+    Container* item = cria_reg(reg->cod, reg->chave);
+
+    Container* aux = (*no)->reg;
+
+    while (aux->prox)
     {
-        bloco = bloco->prox;
+        aux = aux->prox;
     }
-
-    bloco->prox = item;
+    aux->prox = item;
+    return;
+    item->prox = (*no)->reg;
     
+    (*no)->reg = item;
+
 }
 
-void insere_AVL(t_avl* arv, void* reg){
+void insere_AVL(Avl* arv, char* cod, void* chave){
+
+    Container reg = *cria_reg(cod, chave);
 
     if(arv->raiz == NULL){
-        arv->raiz = cria_no(reg);
+        arv->raiz = cria_no(&reg);
         return;
     }
 
-    insere_no(arv, &arv->raiz, reg);
+    insere_no(arv, &arv->raiz, &reg);
+
+    // free(reg);
 }
 
-void rot_esq(t_no **sub_arv)
+void rot_esq(No **sub_arv)
 {
-    t_no* X = *sub_arv;
-    t_no* A = X->esq;
-    t_no* Y = X->dir;
-    t_no* B = Y->esq;
-    t_no* C = Y->dir;
-    // printf("Rot esquerda:\n");
-    // if(X)
-    // printf("X:%d\n",((c_ddd*)(X->reg->reg))->ddd);
-    // if(Y)
-    // printf("Y:%d\n",((c_ddd*)(Y->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->reg->reg))->ddd);
-    // printf("\npais:\n");
-    // if(X->pai)
-    //     printf("X:%d\n",((c_ddd*)(X->pai->reg->reg))->ddd);
-    
-    // if(Y->pai)
-    //     printf("Y:%d\n",((c_ddd*)(Y->pai->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->pai->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->pai->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->pai->reg->reg))->ddd);
-    
-    // printf("\n");
+    No* X = *sub_arv;
+    No* A = X->esq;
+    No* Y = X->dir;
+    No* B = Y->esq;
+    No* C = Y->dir;
+
     if(B)
         B->pai = X;
     Y->pai = X->pai;
@@ -200,67 +218,17 @@ void rot_esq(t_no **sub_arv)
     Y->esq = X;
     *sub_arv = Y;
 
-    // if(X)
-    // printf("X:%d\n",((c_ddd*)(X->reg->reg))->ddd);
-    // if(Y)
-    // printf("Y:%d\n",((c_ddd*)(Y->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->reg->reg))->ddd);
-    // printf("\npais:\n");
-    // if(X->pai)
-    // printf("X:%d\n",((c_ddd*)(X->pai->reg->reg))->ddd);
-    // if(Y->pai)
-    // printf("Y:%d\n",((c_ddd*)(Y->pai->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->pai->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->pai->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->pai->reg->reg))->ddd);
-
-    // printf("\n------------------\n");
-
-
     X->altura = max(altura_no(A), altura_no(B)) + 1;
     Y->altura = max(altura_no(X), altura_no(C)) + 1;
 }
 
-void rot_dir(t_no **sub_arv)
+void rot_dir(No **sub_arv)
 {
-    t_no* Y = *sub_arv;
-    t_no* X = Y->esq;
-    t_no* A = X->esq;
-    t_no* B = X->dir;
-    t_no* C = Y->dir;
-    // printf("Rot dir:\n");
-    // if(X)
-    // printf("X:%d\n",((c_ddd*)(X->reg->reg))->ddd);
-    // if(Y)
-    // printf("Y:%d\n",((c_ddd*)(Y->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->reg->reg))->ddd);
-    // printf("\npais:\n");
-    // if(X->pai)
-    // printf("X:%d\n",((c_ddd*)(X->pai->reg->reg))->ddd);
-    // if(Y->pai)
-    // printf("Y:%d\n",((c_ddd*)(Y->pai->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->pai->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->pai->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->pai->reg->reg))->ddd);
-
-    // printf("\n");
-
+    No* Y = *sub_arv;
+    No* X = Y->esq;
+    No* A = X->esq;
+    No* B = X->dir;
+    No* C = Y->dir;
 
     if(B)
         B->pai = Y;
@@ -271,81 +239,80 @@ void rot_dir(t_no **sub_arv)
     Y->esq = B;
     *sub_arv = X;
 
-    // if(X)
-    // printf("X:%d\n",((c_ddd*)(X->reg->reg))->ddd);
-    // if(Y)
-    // printf("Y:%d\n",((c_ddd*)(Y->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->reg->reg))->ddd);
-    // printf("\npais:\n");
-    // if(X->pai)
-    // printf("X:%d\n",((c_ddd*)(X->pai->reg->reg))->ddd);
-    // if(Y->pai)
-    // printf("Y:%d\n",((c_ddd*)(Y->pai->reg->reg))->ddd);
-    // if(A)
-    //     printf("A:%d\n", ((c_ddd*)(A->pai->reg->reg))->ddd);
-    // if(B)
-    //     printf("B:%d\n",((c_ddd*)(B->pai->reg->reg))->ddd);
-    // if(C)
-    //     printf("C:%d\n",((c_ddd*)(C->pai->reg->reg))->ddd);
-
-    // printf("\n------------------\n");
-
     Y->altura = max(altura_no(B), altura_no(C)) + 1;
     X->altura = max(altura_no(Y), altura_no(A)) + 1;
 
 }
 
-void *busca_AVL(t_avl *arv, void *reg)
-{
-    void * busca = busca_no(arv, arv->raiz, reg);
+No* busca_AVL(Avl* arv, void* chave){
+
+    No * busca = NULL;
+
+    if(arv->raiz)
+        busca = _busca_no(arv, arv->raiz, chave);
+
     return busca;
 }
 
-void destroi_AVL(t_no* no){
-    if(no->esq){
-        destroi_AVL(no->esq);
-    }
-    if(no->dir){
-        destroi_AVL(no->dir);
-    }
-    free(no);   
-}
-
-void *busca_no(t_avl *arv, t_no *no_atual, void *reg)
-{
-    if(no_atual == NULL){
+No * _busca_no(Avl* arv, No* no_atual, void* chave){
+    
+    if(!no_atual)
         return NULL;
-    }
-    else if(arv->cmp(no_atual->reg, reg) < 0){
-        
-        return busca_no(arv, no_atual->dir, reg);
 
+    if(arv->cmp(no_atual->reg->chave, chave) < 0){
+
+        return _busca_no(arv, no_atual->dir, chave);
     }
-    else if(arv->cmp(no_atual->reg, reg) > 0){
-        
-        return busca_no(arv, no_atual->esq, reg);
+    else if(arv->cmp(no_atual->reg->chave, chave) > 0){
+
+        return _busca_no(arv, no_atual->esq, chave);
     }
     else{
-        return no_atual->reg;
+        return no_atual;
     }
 }
 
-void * remove_AVL(t_avl* arv, void* item){
+No *busca_AVL_prox(Avl *arv, void *chave)
+{
+    No * busca = NULL;
+
+    if(arv->raiz)
+        busca = _busca_no_prox(arv, arv->raiz, chave);
+    
+    return busca;
+}
+
+No *_busca_no_prox(Avl *arv, No *no_atual, void *chave)
+{ 
+    if(arv->cmp(no_atual->reg->chave, chave) < 0){
+        
+        if(!no_atual->dir)
+            return no_atual;
+        return _busca_no_prox(arv, no_atual->dir, chave);
+
+    }
+    else if(arv->cmp(no_atual->reg->chave, chave) > 0){
+
+        if(!no_atual->esq)
+            return no_atual;
+        return _busca_no_prox(arv, no_atual->esq, chave);
+    }
+    else{
+        return no_atual;
+    }
+}
+
+void * remove_AVL(Avl* arv, void* item){
     
     return _remove_no(arv, &arv->raiz, item);
     
 }
 
-void * _remove_no(t_avl* arv, t_no** no, void* item){
+void * _remove_no(Avl* arv, No** no, void* item){
 
     
     void* ret = NULL;
-    t_no* aux = *no;
+    No* aux = *no;
 
     if(arv->cmp((*no)->reg, item) < 0){
         if((*no)->dir){
@@ -380,7 +347,7 @@ void * _remove_no(t_avl* arv, t_no** no, void* item){
             free(aux);
         }else{
             
-            t_no** sucessor = percorre_esq(&(*no)->dir);
+            No** sucessor = percorre_esq(&(*no)->dir);
             (*no)->reg = (*sucessor)->reg;
             _remove_no(arv, &(*no)->dir, (*sucessor)->reg);
         }
@@ -395,19 +362,18 @@ void * _remove_no(t_avl* arv, t_no** no, void* item){
     return ret;
 }
 
-t_no** percorre_esq(t_no** sub_arv){
-    t_no** ret = sub_arv;
+No** percorre_esq(No** sub_arv){
+    No** ret = sub_arv;
 
     while ((*ret)->esq)
     {
-        printf("passando por: %d\n", ((c_ddd*)((*ret)->reg)->reg)->ddd);
         *ret = (*ret)->esq;
     }
 
     return ret;
     
 }
-t_no* _procura_esq(t_no* sub_arv){
+No* _procura_esq(No* sub_arv){
 
     while (sub_arv->esq)
     {
@@ -418,7 +384,7 @@ t_no* _procura_esq(t_no* sub_arv){
     return sub_arv;
 }
 
-t_no *sucessor(t_no *no)
+No *sucessor(No *no)
 {
     //Caso tenha sub-árvore direita, percorra a esquerda nesta para achar o sucessor
     if(no->dir){
@@ -442,4 +408,14 @@ t_no *sucessor(t_no *no)
     }
 
     return no->pai;
+}
+
+void destroi_AVL(No* no){
+    if(no->esq){
+        destroi_AVL(no->esq);
+    }
+    if(no->dir){
+        destroi_AVL(no->dir);
+    }
+    free(no);   
 }

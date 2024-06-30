@@ -1,47 +1,62 @@
 #pragma once
 
+typedef int Type;
+#define INT 1
+#define FLOAT 2
+#define STR 3
+
 typedef struct container{
-    void* reg;
+    char* cod;
+    void* chave;
     struct container* prox;
-}t_cont;
+}Container;
 
 typedef struct no{
 
-    t_cont* reg;
+    Container* reg;
     int altura;
     struct no* esq;
     struct no* dir;
     struct no* pai;
-}t_no;
+}No;
 
 typedef struct{
-    t_no* raiz;
+    No* raiz;
+    Type tipo;
     int (*cmp)(const void*, const void*);
-}t_avl;
+}Avl;
 
-t_avl* cria_avl(int (*cmp)(const void*, const void*));
-t_no* cria_no(void* reg);
+Avl* cria_avl(Type tipo);
+No* cria_no(Container* reg);
+Container* cria_reg(char* cod, void* reg);
+
+int cmp_int(const void* a, const void* b);
+int cmp_float(const void* a, const void* b);
+int cmp_str(const void* a, const void* b);
 
 int max(int a, int b);
-int altura_no(t_no* no);
+int altura_no(No* no);
 
-// void percorre(t_no* no);
+// void percorre(No* no);
 
-void rebalanceia(t_no** sub_arv);
-void rot_esq(t_no** sub_arv);
-void rot_dir(t_no** sub_arv);
-t_no** percorre_esq(t_no** sub_arv);
-t_no* sucessor(t_no* no);
-t_no* _procura_esq(t_no* sub_arv);
+void rebalanceia(No** sub_arv);
+void rot_esq(No** sub_arv);
+void rot_dir(No** sub_arv);
+No** percorre_esq(No** sub_arv);
+No* sucessor(No* no);
+No* _procura_esq(No* sub_arv);
 
-void insere_no(t_avl* arv, t_no** no_atual, void* reg);
-void insere_AVL(t_avl* arv, void* reg);
-void _insere_mesmo_no(t_no* no, void* reg);
+void insere_no(Avl* arv, No** no_atual, Container* reg);
+void insere_AVL(Avl* arv, char* cod, void* chave);
+void _insere_mesmo_no(No** no, Container* reg);
 
-void * busca_AVL(t_avl* arv, void* reg);
-void * busca_no(t_avl* arv, t_no* no_atual, void* reg);
+No* busca_AVL(Avl* arv, void* chave);
+No* _busca_no(Avl* arv, No* no_atual, void* chave);
 
-void * remove_AVL(t_avl* arv, void* item);
-void * _remove_no(t_avl* arv, t_no** no, void* item);
+No * busca_AVL_prox(Avl* arv, void* reg);
+No * _busca_no_prox(Avl* arv, No* no_atual, void* reg);
 
-void destroi_AVL(t_no* no);
+void * remove_AVL(Avl* arv, void* item);
+void * _remove_no(Avl* arv, No** no, void* item);
+
+void destroi_AVL(No* no);
