@@ -5,8 +5,8 @@
 #define SEED 0x123456
 
 // "Construtor" da hash
-t_hash* criaHash(int tam, char *(*get_key)(const void*)){
-    t_hash* nova = (t_hash*)malloc(sizeof(t_hash));
+Hash_table* criaHash(int tam, char *(*get_key)(const void*)){
+    Hash_table* nova = (Hash_table*)malloc(sizeof(Hash_table));
 
     nova->get_key = get_key;
     nova->max = tam;
@@ -17,7 +17,7 @@ t_hash* criaHash(int tam, char *(*get_key)(const void*)){
     return nova;
 }
 
-void apagaHash(t_hash* hash){
+void apagaHash(Hash_table* hash){
     if (hash == NULL)
         return;
     
@@ -29,7 +29,7 @@ void apagaHash(t_hash* hash){
     free(hash);
 }
 
-int insereHash(t_hash* hash, void * bucket){
+int insereHash(Hash_table* hash, void * bucket){
     uint32_t n = hash_f(hash->get_key(bucket), SEED);
     uint32_t k = hash_f2(hash->get_key(bucket), SEED);
 
@@ -53,7 +53,7 @@ int insereHash(t_hash* hash, void * bucket){
 
     return EXIT_SUCCESS;
 }
-int removeHash(t_hash *hash, const char* key){
+int removeHash(Hash_table *hash, const char* key){
 
     uint32_t n = hash_f(key, SEED);
     uint32_t k = hash_f2(key, SEED);
@@ -74,7 +74,7 @@ int removeHash(t_hash *hash, const char* key){
     return EXIT_FAILURE;
 }
 
-void * buscaHash(t_hash *hash, const char* key){
+void * buscaHash(Hash_table *hash, const char* key){
     uint32_t n = hash_f(key, SEED);
     uint32_t k = hash_f2(key, SEED);
 
