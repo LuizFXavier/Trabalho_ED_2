@@ -52,6 +52,12 @@ int main(){
     
     free_query(query_p);
     apagaHash(hashC);
+    
+    for(int i = 0; i < 5; i++){
+
+        destroi_AVL(arvores[i]->raiz);
+        free(arvores[i]);
+    }
 
     return 0;
 }

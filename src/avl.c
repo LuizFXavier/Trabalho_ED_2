@@ -411,6 +411,15 @@ No *sucessor(No *no)
 }
 
 void destroi_AVL(No* no){
+
+    Container* prox;
+
+    while (no->reg) {
+        prox = no->reg->prox;
+        free(no->reg);
+        no->reg = prox;
+    }
+
     if(no->esq){
         destroi_AVL(no->esq);
     }
