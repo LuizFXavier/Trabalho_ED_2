@@ -3,9 +3,13 @@
 #include <string.h>
 #include "menus.h"
 
-int menu_inicial(){
+/**
+ * Menu de seleção de ação inicial.
+ * @return Opção escolhida.
+*/
+Opcao menu_inicial(){
 
-    int opcao = 0;
+    Opcao opcao = 0;
     char c[5];
     do{
         printf("\n\n");
@@ -27,9 +31,13 @@ int menu_inicial(){
     return opcao;
 }
 
-int menu_campo()
+/**
+ * Menu de seleção de campo que será usado na busca.
+ * @return Opção escolhida.
+*/
+Opcao menu_campo()
 {
-    int opcao = 0;
+    Opcao opcao = 0;
     char c[5];
     do{
         printf("Qual campo deve ser usado como referência?\n");
@@ -52,9 +60,13 @@ int menu_campo()
     return opcao;
 }
 
-int menu_operacao(Campo campo){
+/**
+ * Menu de seleção de operação de comparação usada na busca.
+ * @return Opção escolhida.
+*/
+Opcao menu_operacao(Campo campo){
     char c[5];
-    int opcao;
+    Opcao opcao;
     char* campoT;
 
     switch (campo)
@@ -93,6 +105,9 @@ int menu_operacao(Campo campo){
     return opcao;
 }
 
+/**
+ * Menu de seleção de definição dos valores de mínimo, máximo ou chave específica de um filtro.
+*/
 void menu_valores(Filtro* f){
     char c[50];
 
@@ -120,6 +135,10 @@ void menu_valores(Filtro* f){
 
 }
 
+/**
+ * Apresenta os menus para a contrução do filtro.
+ * @return Filtro que será utilizado na query.
+*/
 Filtro* montar_filtro(){
     Filtro* filtro = (Filtro*)malloc(sizeof(Filtro));
     

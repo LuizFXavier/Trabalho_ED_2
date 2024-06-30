@@ -134,6 +134,10 @@ void rebalanceia(No** sub_arv){
     
 }
 
+/**
+ * Função recursiva que inserirá o novo registro no nó correto.
+ * @param reg Registro a ser armazenado.
+*/
 void insere_no(Avl* arv, No** no_atual, Container* reg){
     
     if(arv->cmp((*no_atual)->reg->chave, reg->chave) < 0){
@@ -167,20 +171,21 @@ void insere_no(Avl* arv, No** no_atual, Container* reg){
     
     rebalanceia(no_atual);
 }
+/**
+ * Dado um nó, coloca o novo registro no final da lista ligada presente nele.
+*/
 void _insere_mesmo_no(No** no, Container* reg){
-    
-
 
     Container* item = cria_reg(reg->cod, reg->chave);
 
     Container* aux = (*no)->reg;
 
-    while (aux->prox)
-    {
-        aux = aux->prox;
-    }
-    aux->prox = item;
-    return;
+    // while (aux->prox)
+    // {
+    //     aux = aux->prox;
+    // }
+    // aux->prox = item;
+    // return;
     item->prox = (*no)->reg;
     
     (*no)->reg = item;
@@ -244,6 +249,10 @@ void rot_dir(No **sub_arv)
 
 }
 
+/**
+ * Busca na AVL por um elemento exato
+ * @return Nó com a chave especificada ou NULL caso não a encontre;
+*/
 No* busca_AVL(Avl* arv, void* chave){
 
     No * busca = NULL;
@@ -271,7 +280,11 @@ No * _busca_no(Avl* arv, No* no_atual, void* chave){
         return no_atual;
     }
 }
-
+/**
+ * Busca pelo nó com o valor mais próximo ao fornecido.
+ * @param chave Valor a ser procurado.
+ * @return Nó com a chave especificada ou nó folha com chave menor ou igual a chave.
+*/
 No *busca_AVL_prox(Avl *arv, void *chave)
 {
     No * busca = NULL;
@@ -373,17 +386,24 @@ No** percorre_esq(No** sub_arv){
     return ret;
     
 }
+
+/**
+ * Busca por nó mais a esquerda de uma sub-árvore fornecida.
+*/
 No* _procura_esq(No* sub_arv){
 
     while (sub_arv->esq)
     {
-        // printf("passando por: %d\n", ((c_ddd*)sub_arv->reg->reg)->ddd);
         sub_arv = sub_arv->esq;
     }
 
     return sub_arv;
 }
 
+/**
+ * Função que retorna o sucessor de um nó especificado
+ * @return Nó sucessor se o encontrar ou NULL caso não.
+*/
 No *sucessor(No *no)
 {
     //Caso tenha sub-árvore direita, percorra a esquerda nesta para achar o sucessor
@@ -410,6 +430,10 @@ No *sucessor(No *no)
     return no->pai;
 }
 
+/**
+ * Liberação de memória da AVL
+ * @param no Raiz da sub-árvore a ser deletada.
+*/
 void destroi_AVL(No* no){
 
     Container* prox;

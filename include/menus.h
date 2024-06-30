@@ -31,8 +31,8 @@ typedef struct{
     Campo campo;
 }Filtro;
 
-int menu_inicial();
-int menu_campo();
-int menu_operacao(Campo campo);
+Opcao menu_inicial();
+Opcao menu_campo();
+Opcao menu_operacao(Campo campo);
 void menu_valores(Filtro* f);
 Filtro *montar_filtro();
