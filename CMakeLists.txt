@@ -7,6 +7,7 @@ add_executable(trab2
     src/technical.c
     src/avl.c
     src/cidade.c
+    src/menus.c
     src/query.c
     src/main.c)
 
