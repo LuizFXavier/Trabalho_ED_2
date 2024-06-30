@@ -4,98 +4,142 @@
 #include "hash.h"
 #include "avl.h"
 #include "query.h"
+#include "menus.h"
 
 #define NUM_CIDADES 5570
 
-void percorre(t_no* no);
+Cidade* read_json(JSENSE *file, int i);
+void print_query(Query* query, Hash_table* hash);
+void menu(Avl* arvores[], Query** query_p, Opcao opcao, Hash_table* hash);
 
 int main(){
-    t_avl * avl_ddd = cria_avl(cmp_ddd);
-    t_avl * avl_long = cria_avl(cmp_long);
-    t_avl * avl_lat = cria_avl(cmp_lat);
-    t_avl * avl_nome = cria_avl(cmp_nome);
-    t_avl * avl_cod_uf = cria_avl(cmp_cod_UF);
+    Avl * avl_ddd = cria_avl(INT);
+    Avl * avl_long = cria_avl(FLOAT);
+    Avl * avl_lat = cria_avl(FLOAT);
+    Avl * avl_nome = cria_avl(STR);
+    Avl * avl_cod_uf = cria_avl(INT);
 
-    t_hash *hashC = criaHash(100 * 100, get_key);
+    Hash_table *hashC = criaHash(100 * 100, get_key);
 
-    char itens[9][18];
-
-    JSENSE *j = jse_from_file("test/municipios.json");
-
-    int error;
+    JSENSE *file = jse_from_file("test/municipios.json");
 
     // Leitura do JSON
 
     for(int i = 0; i < NUM_CIDADES; i++){
-    
-        cidade* m = (cidade*) malloc(sizeof(cidade));
-        c_ddd* m_ddd = (c_ddd*) malloc(sizeof(c_ddd));
-        c_long* m_long = (c_long*) malloc(sizeof(c_long));
-        c_lat* m_lat = (c_lat*) malloc(sizeof(c_lat));
-        c_cod_UF* m_cod_UF = (c_cod_UF*) malloc(sizeof(c_cod_UF));
-        c_nome* m_nome = (c_nome*) malloc(sizeof(c_nome));
-
-        sprintf(itens[0], "[%d].codigo_ibge",i);
-        sprintf(itens[1], "[%d].nome",i);
-        sprintf(itens[2], "[%d].latitude",i);
-        sprintf(itens[3], "[%d].longitude",i);
-        sprintf(itens[4], "[%d].capital",i);
-        sprintf(itens[5], "[%d].codigo_uf",i);
-        sprintf(itens[6], "[%d].siafi_id",i);
-        sprintf(itens[7], "[%d].ddd",i);
-        sprintf(itens[8], "[%d].fuso_horario",i);
-
-        m->codigo_ibge = jse_get(j, itens[0]);
-        m->nome = jse_get(j, itens[1]);
-
-        m->latitude = tec_string_to_double(jse_get(j, itens[2]), &error);
-        m->longitude = tec_string_to_double(jse_get(j, itens[3]), &error);
-
-        m->capital = tec_string_to_int(jse_get(j, itens[4]));
-        m->codigo_uf = tec_string_to_int(jse_get(j, itens[5]));
-
-        m->siafi_id = tec_string_to_int(jse_get(j, itens[6]));
-        m->ddd = tec_string_to_int(jse_get(j, itens[7]));
-        m->fuso_horario = jse_get(j, itens[8]);
-
-        m_cod_UF->codigo_uf = m->codigo_uf;
-        m_ddd->ddd = m->ddd;
-        m_lat->latitude = m->latitude;
-        m_long->longitude = m->longitude;
-        m_nome->nome = m->nome;
-
-        m_cod_UF->codigo_ibge = m->codigo_ibge;
-        m_nome->codigo_ibge = m->codigo_ibge;
-        m_long->codigo_ibge = m->codigo_ibge;
-        m_lat->codigo_ibge = m->codigo_ibge;
-        m_ddd->codigo_ibge = m->codigo_ibge;
-
+        Cidade* m = read_json(file, i);
         
         insereHash(hashC, m);
-        insere_AVL(avl_ddd, m_ddd);
-        // insere_AVL(avl_long, m_long);
-        // insere_AVL(avl_lat, m_lat);
-        // insere_AVL(avl_cod_uf, m_cod_UF);
-        // insere_AVL(avl_nome, m_nome);
+        insere_AVL(avl_nome, m->codigo_ibge, m->nome);
+        insere_AVL(avl_long, m->codigo_ibge, &m->longitude);
+        insere_AVL(avl_lat, m->codigo_ibge, &m->latitude);
+        insere_AVL(avl_ddd, m->codigo_ibge, &m->ddd);
+        insere_AVL(avl_cod_uf, m->codigo_ibge, &m->codigo_uf);
     }
-    free(j);
-    printf("Inseriu tudo\n");
 
-    // percorre(avl_ddd->raiz);
-    // printf("\n\n");
+    Avl* arvores[5] = {avl_nome, avl_long, avl_lat, avl_ddd, avl_cod_uf};
 
-    // percorre(avl_long->raiz);
-    // printf("\n\n");
+    Query* query_p = NULL;
+    Opcao opcao;
 
-    // percorre(avl_lat->raiz);
-    // printf("\n\n");
+    printf("Bem vindo a busca de municípios do Brasil!");
+    do
+    {
+        opcao = menu_inicial();
 
-    // percorre(avl_nome->raiz);
-    // printf("\n\n");
+        menu(arvores, &query_p, opcao, hashC);
+        
+    } while (opcao != ENCERRAR);
+    
+    free_query(query_p);
+    apagaHash(hashC);
 
-    // percorre(avl_cod_uf->raiz);
-    // printf("\n");
-
-    range_query(avl_ddd, 66, 69);
+    return 0;
 }
 
+Cidade* read_json(JSENSE *file, int i){
+    int error;
+    char itens[9][18];
+
+    sprintf(itens[0], "[%d].codigo_ibge",i);
+    sprintf(itens[1], "[%d].nome",i);
+    sprintf(itens[2], "[%d].latitude",i);
+    sprintf(itens[3], "[%d].longitude",i);
+    sprintf(itens[4], "[%d].capital",i);
+    sprintf(itens[5], "[%d].codigo_uf",i);
+    sprintf(itens[6], "[%d].siafi_id",i);
+    sprintf(itens[7], "[%d].ddd",i);
+    sprintf(itens[8], "[%d].fuso_horario",i);
+
+    char* ibge = jse_get(file, itens[0]);
+    char* nome = jse_get(file, itens[1]);
+
+    float latitude = tec_string_to_double(jse_get(file, itens[2]), &error);
+    float longitude = tec_string_to_double(jse_get(file, itens[3]), &error);
+
+    int capital = tec_string_to_int(jse_get(file, itens[4]));
+    int codigo_uf = tec_string_to_int(jse_get(file, itens[5]));
+
+    int siafi_id = tec_string_to_int(jse_get(file, itens[6]));
+    int ddd = tec_string_to_int(jse_get(file, itens[7]));
+    char* fuso_horario = jse_get(file, itens[8]);
+
+    return cria_cidade(ibge, nome, longitude, latitude, capital, codigo_uf, siafi_id, ddd, fuso_horario);
+}
+
+void menu(Avl* arvores[], Query** query_p, Opcao opcao, Hash_table* hash){
+    
+    Query* query_s;
+    
+    switch (opcao)
+    {
+    case FILTRAR:
+        if(!(*query_p))
+            *query_p = do_query(arvores);
+        else{
+            query_s = do_query(arvores);
+            *query_p = merge_query(*query_p, query_s);
+            free_query(query_s);
+        }
+        printf("Busca concluída!");
+        break;
+    case LIMPAR:
+        free_query(*query_p);
+        *query_p = NULL;
+        system("clear || cls");
+        printf("Filtro limpo!\n");
+        break;
+    case IMPRIMIR:
+        print_query(*query_p, hash);
+        break;
+    }
+    
+}
+void print_query(Query* query, Hash_table* hash){
+
+    if(!query){
+        system("clear || cls");
+        printf("Não há resultados a serem vistos!\n");
+        return;
+    }
+    Container *atual = query->inicio;
+
+    while (atual)
+    {   
+        Cidade* mun = (Cidade*)buscaHash(hash, atual->cod);
+        printf("-----------------------------\n");
+        printf("Nome: %s\n", mun->nome);
+        printf("Código IBGE: %s\n", mun->codigo_ibge);
+        printf("DDD: %d\n", mun->ddd);
+        printf("Capital: %d\n", mun->capital);
+        printf("Longitude: %lf\n", mun->longitude);
+        printf("Latitude: %lf\n", mun->latitude);
+        printf("Código UF: %d\n", mun->codigo_uf);
+        printf("Siafi ID: %d\n", mun->siafi_id);
+        printf("Fuso horário: %s\n\n", mun->fuso_horario);
+        printf("-----------------------------\n");
+        atual = atual->prox;
+    }
+
+    printf("Número de correspondências:%d\n", query->tam);
+    printf("-----------------------------\n");
+}
